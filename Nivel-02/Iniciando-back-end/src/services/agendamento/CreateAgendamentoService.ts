@@ -2,6 +2,7 @@ import { startOfHour } from 'date-fns';
 import { getCustomRepository } from 'typeorm';
 import Agendamento from '../../models/Agendamento';
 import AgendamentoRepository from '../../repositories/AgendamentoRepository';
+import AppError from '../../errors/AppError';
 
 interface Request {
   barbeiro_id: string;
@@ -17,7 +18,7 @@ class CreateAgendamentoService {
       agendamentoData,
     );
     if (buscarAgendamento) {
-      throw Error('Já existe agendamento nesse horario.');
+      throw new AppError('Já existe agendamento nesse horario.');
     }
 
     const agendamento = agendamentoRepository.create({
