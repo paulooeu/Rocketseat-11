@@ -1,31 +1,39 @@
 import { startOfHour } from 'date-fns';
-import { getCustomRepository } from 'typeorm';
+
 import AppError from '@shared/errors/AppError';
 import Agendamento from '../infra/typeorm/entities/Agendamento';
-import AgendamentoRepository from '../repositories/AgendamentoRepository';
+import IAgendamentoRepository from '../repositories/IAgendamentosRepository';
+import  {injectable, inject} from 'tsyringe'
 
-interface Request {
+interface IRequest {
   barbeiro_id: string;
   data: Date;
 }
 
+@injectable()
 class CreateAgendamentoService {
-  public async execute({ data, barbeiro_id }: Request): Promise<Agendamento> {
-    const agendamentoRepository = getCustomRepository(AgendamentoRepository);
+
+  constructor(
+    @inject('AgendamentoRepository')
+private agendamentoRepository:IAgendamentoRepository,
+  ){}
+
+  public async execute({ data, barbeiro_id }: IRequest): Promise<Agendamento> {
+    
     const agendamentoData = startOfHour(data);
 
-    const buscarAgendamento = await agendamentoRepository.buscarData(
+    const buscarAgendamento = await this.agendamentoRepository.buscarData(
       agendamentoData,
     );
     if (buscarAgendamento) {
       throw new AppError('Já existe agendamento nesse horario.');
     }
 
-    const agendamento = agendamentoRepository.create({
+    const agendamento =  await this.agendamentoRepository.create({
       barbeiro_id,
       data: agendamentoData,
     });
-    await agendamentoRepository.save(agendamento);
+    
     return agendamento;
   }
 }

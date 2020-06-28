@@ -1,9 +1,12 @@
-import { getRepository } from 'typeorm';
+
 import { compare } from 'bcryptjs';
 import { sign } from 'jsonwebtoken';
 import authConfig from '@config/auth';
 import AppError from '@shared/errors/AppError';
 import Usuario from '../infra/typeorm/entities/Usuario';
+import IUsuarioRepository from '../repositorie/IUsuarioRepository'
+
+import {injectable,inject} from 'tsyringe'
 
 interface Request {
   email: string;
@@ -14,10 +17,13 @@ interface Response {
   token: string;
 }
 
+@injectable()
 class AutenticarUsuarioService {
+  constructor(
+    @inject('UsuarioRepository')
+    private usuarioRepository:IUsuarioRepository,  ){}
   public async execute({ email, senha }: Request): Promise<Response> {
-    const usuarioRepository = getRepository(Usuario);
-    const usuario = await usuarioRepository.findOne({ where: { email } });
+        const usuario = await this.usuarioRepository.findByEmail(email)
 
     if (!usuario) {
       throw new AppError('Email/Senha incorreto', 401);
